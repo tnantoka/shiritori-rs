@@ -1,2 +1,5 @@
 /target
 /Cargo.lock
+/bin/*.zip
+/bin/pokeapi-*
+/bin/unidic-cwj-*

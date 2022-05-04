@@ -1,9 +1,7 @@
-pub struct Game {
-
-}
+pub struct Game {}
 
 impl Game {
-  pub fn new() -> Self {
-    Game {}
-  }
+    pub fn new() -> Self {
+        Game {}
+    }
 }
