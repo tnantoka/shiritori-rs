@@ -1,6 +1,8 @@
-use rand::Rng;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+
+pub mod word_list;
+pub use word_list::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Word {
@@ -46,63 +48,35 @@ impl Word {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WordList {
-    pub items: Vec<Word>,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl WordList {
-    pub fn new(items: Vec<Word>) -> Self {
-        WordList { items }
+    #[test]
+    fn it_constructs() {
+        let word = Word::new("リュー".to_string(), "リュー".to_string());
+        assert_eq!(word.text, "リュー");
+        assert_eq!(word.reading, "リユ");
     }
 
-    pub fn load(word_list_type: WordListType) -> Self {
-        let json = word_list_type.as_json();
-        serde_json::from_str(&json).unwrap()
+    #[test]
+    fn returns_first_letter() {
+        let word = Word::new("アイ".to_string(), "アイ".to_string());
+        assert_eq!(word.first_letter(), 'ア');
     }
 
-    pub fn word_by_text(&self, text: &str) -> Option<Word> {
-        for item in &self.items {
-            if item.text == text || item.reading == text {
-                return Some(item.clone());
-            }
-        }
-        None
+    #[test]
+    fn returns_last_letter() {
+        let word = Word::new("アイ".to_string(), "アイ".to_string());
+        assert_eq!(word.last_letter(), 'イ');
     }
 
-    pub fn random_word(&self) -> Word {
-        let mut rng = rand::thread_rng();
-        self.items[rng.gen_range(0..self.items.len())].clone()
-    }
+    #[test]
+    fn validates() {
+        let word = Word::new("パイ".to_string(), "パイ".to_string());
+        assert_eq!(word.last_letter_is_invalid(), false);
 
-    pub fn random_word_by_prefix(&self, prefix: char) -> Option<Word> {
-        let mut rng = rand::thread_rng();
-
-        let mut words = vec![];
-        for item in &self.items {
-            if item.reading.starts_with(prefix) {
-                words.push(item);
-            }
-        }
-
-        if words.is_empty() {
-            None
-        } else {
-            Some(words[rng.gen_range(0..words.len())].clone())
-        }
-    }
-}
-
-pub enum WordListType {
-    Unidic,
-    Pokemon,
-}
-
-impl WordListType {
-    pub fn as_json(self) -> String {
-        match self {
-            WordListType::Unidic => include_str!("words/unidic.json").to_string(),
-            WordListType::Pokemon => include_str!("words/pokemon.json").to_string(),
-        }
+        let word = Word::new("パン".to_string(), "パン".to_string());
+        assert_eq!(word.last_letter_is_invalid(), true);
     }
 }
