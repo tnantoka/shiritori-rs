@@ -4,6 +4,10 @@ Shiritori is a famous word chain game in Japan.
 
 ![](/docs/shirotori.png)
 
+## Live demo (Wasm)
+
+https://tnantoka.github.io/shiritori-wasm/
+
 ## Usage
 
 ```
@@ -13,7 +17,7 @@ shiritori = { git = "https://github.com/tnantoka/shiritori-rs.git" }
 getrandom = { version = "0.2.6", features = ["js"] }
 ```
 
-```
+```rust
 use shiritori::game::{Game};
 use shiritori::word::{WordList, WordListType};
 
