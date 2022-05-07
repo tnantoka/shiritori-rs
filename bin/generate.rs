@@ -46,11 +46,7 @@ fn load_csv(
         let filter = fields[filter_index];
         if filter == filter_value {
             let reading = fields[reading_index];
-            if reading.chars().count() > 1
-                && !reading.starts_with('ン')
-                && !text.ends_with('ー')
-                && !reading.ends_with('ー')
-            {
+            if reading.chars().count() > 1 && !reading.starts_with('ン') {
                 let word = Word::new(text.to_string(), reading.to_string());
                 words.push(word);
             }
