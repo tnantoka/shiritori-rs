@@ -27,7 +27,7 @@ impl Game {
 
     pub fn next_turn(&mut self, text: &str) -> Judgement {
         let word = self.word_list.word_by_text(text);
-        let judgement = self.judge(text, word.clone(), Player::Bot);
+        let judgement = self.judge(text, self.current_word(), word.clone(), Player::Bot);
         if let Some(ref word) = word {
             self.histories.push(word.clone());
         }
@@ -39,16 +39,29 @@ impl Game {
             .word_list
             .random_word_by_prefix(word.unwrap().last_letter())
             .unwrap_or_else(|| Word::new(String::new(), String::new()));
-        let judgement = self.judge(word.text.as_str(), Some(word.clone()), Player::You);
+        let judgement = self.judge(
+            word.text.as_str(),
+            self.current_word(),
+            Some(word.clone()),
+            Player::You,
+        );
         self.histories.push(word);
         judgement
     }
 
-    fn judge(&self, text: &str, word: Option<Word>, winner: Player) -> Judgement {
-        match word {
+    fn judge(
+        &self,
+        text: &str,
+        current_word: Word,
+        next_word: Option<Word>,
+        winner: Player,
+    ) -> Judgement {
+        match next_word {
             Some(word) => {
                 if self.duplicated(text) {
                     return Judgement::new(true, Some(winner), Some(Reason::DuplicatedWord));
+                } else if current_word.last_letter() != word.first_letter() {
+                    return Judgement::new(true, Some(winner), Some(Reason::FirstLetterIsInvalid));
                 } else if word.last_letter_is_invalid() {
                     return Judgement::new(true, Some(winner), Some(Reason::LastLetterIsInvalid));
                 }
@@ -103,6 +116,7 @@ impl Player {
 #[derive(Serialize, Debug, PartialEq)]
 pub enum Reason {
     DuplicatedWord,
+    FirstLetterIsInvalid,
     LastLetterIsInvalid,
     NotFoundInDictionary,
 }
@@ -111,6 +125,7 @@ impl Reason {
     pub fn as_str(&self) -> &str {
         match self {
             Reason::DuplicatedWord => "duplicated word",
+            Reason::FirstLetterIsInvalid => "first letter is invalid",
             Reason::LastLetterIsInvalid => "last letter is invalid",
             Reason::NotFoundInDictionary => "not found in dictionary",
         }
@@ -157,5 +172,23 @@ mod tests {
         assert_eq!(judgement.game_over, true);
         assert_eq!(judgement.winner, Some(Player::Bot));
         assert_eq!(judgement.reason, Some(Reason::DuplicatedWord));
+    }
+
+    #[test]
+    fn it_judges_first_letter() {
+        let word_list = WordList {
+            items: vec![Word::new("カイ".to_string(), "カイ".to_string())],
+        };
+        let mut game = Game::new(word_list);
+        game.word_list = WordList {
+            items: vec![
+                Word::new("カイ".to_string(), "カイ".to_string()),
+                Word::new("タコ".to_string(), "タコ".to_string()),
+            ],
+        };
+        let judgement = game.next_turn("タコ");
+        assert_eq!(judgement.game_over, true);
+        assert_eq!(judgement.winner, Some(Player::Bot));
+        assert_eq!(judgement.reason, Some(Reason::FirstLetterIsInvalid));
     }
 }
